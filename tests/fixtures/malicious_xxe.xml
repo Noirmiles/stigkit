@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Benchmark [
+  <!ENTITY xxe SYSTEM "file:///etc/passwd">
+]>
+<Benchmark xmlns="http://checklists.nist.gov/xccdf/1.1" id="xccdf_evil_benchmark">
+  <title>&xxe;</title>
+  <Group id="V-000001">
+    <Rule id="SV-000001r1_rule" severity="high">
+      <version>EVIL-00-000010</version>
+      <title>&xxe;</title>
+    </Rule>
+  </Group>
+</Benchmark>
