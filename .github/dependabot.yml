@@ -1,0 +1,17 @@
+# Dependency updates. Two ecosystems, because a pinned GitHub Action is a
+# dependency exactly as much as a pinned Python package is -- and pinning
+# actions to SHAs (see ci.yml) means nothing updates them unless something
+# is watching.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

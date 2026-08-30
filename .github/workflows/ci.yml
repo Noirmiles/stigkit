@@ -1,0 +1,239 @@
+# Build and security pipeline for stigkit.
+#
+# Layout rationale
+# ----------------
+# Four independent security gates run in parallel with the test matrix, each
+# owning one class of risk:
+#
+#   sast      - flaws in code we wrote            (Semgrep)
+#   sca       - flaws in code we imported         (pip-audit)
+#   secrets   - credentials committed by mistake  (gitleaks)
+#   iac/fs    - misconfiguration and vulnerable   (Trivy)
+#               files in the tree
+#
+# They are separate jobs rather than steps in one so that a Semgrep failure
+# still tells you whether your dependencies are clean. A single "security" job
+# that stops at the first failure hides the other three findings and turns a
+# ten-minute fix into three sequential pipeline runs.
+#
+# Supply chain
+# ------------
+# Every third-party action is pinned to a full commit SHA, not a tag. Tags are
+# mutable: `@v4` is a promise from the action's owner that they will not change
+# what v4 points at, and a compromised or careless maintainer breaks that
+# promise silently. The SHA is the only immutable reference GitHub offers.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Dependencies rot without any commit from us: a CVE published on Tuesday
+    # makes Monday's green build wrong. Re-run the gates weekly.
+    - cron: "17 6 * * 1"
+
+# Least privilege by default. Jobs that need more request it explicitly, so the
+# blast radius of a compromised action is visible in the diff that grants it.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: test (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install
+        run: python -m pip install --upgrade pip && pip install -e ".[dev]"
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Test
+        run: pytest --cov --cov-report=term-missing --cov-report=xml
+
+      - name: Enforce coverage floor
+        # A floor, not a target. It stops coverage sliding while nobody is
+        # looking; it does not claim 90% coverage means the code is correct.
+        run: |
+          python - <<'PY'
+          import sys, xml.etree.ElementTree as ET
+          rate = float(ET.parse("coverage.xml").getroot().get("line-rate"))
+          pct = round(rate * 100, 2)
+          print(f"line coverage: {pct}%")
+          sys.exit(0 if pct >= 90 else 1)
+          PY
+
+  sast:
+    name: SAST (Semgrep)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Semgrep
+        run: pip install semgrep
+
+      - name: Scan
+        # Explicit rulesets rather than --config=auto: auto resolves rules from
+        # the network at run time, so the checks applied to a given commit are
+        # not reproducible and not reviewable.
+        run: |
+          semgrep scan \
+            --config p/python \
+            --config p/security-audit \
+            --config p/secrets \
+            --sarif --output semgrep.sarif \
+            --metrics=off \
+            --error
+
+      - name: Upload SARIF
+        # Private repos need GitHub Advanced Security for Code Scanning upload.
+        # The scan itself already failed the job above if it found anything, so
+        # a failed upload must not mask a passing scan.
+        if: always()
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@6f5948dfacef28e207b48d0905cf90c03365536d # v3
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
+  sca:
+    name: Dependencies (pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: python -m pip install --upgrade pip && pip install -e ".[dev]" pip-audit
+
+      - name: Audit installed dependencies
+        # Audits the resolved environment, not just the declared ranges, so a
+        # vulnerable transitive pin is caught rather than assumed safe.
+        #
+        # --skip-editable excludes stigkit itself: it is installed editable and
+        # is not on PyPI, so there is no advisory data to audit it against.
+        # Note the absence of --strict, which is deliberate -- --strict fails
+        # the run on any package it *skipped*, which would mean this gate could
+        # never pass on a project that installs itself.
+        run: pip-audit --skip-editable --desc
+
+  secrets:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          # Full history. A secret deleted in the working tree is still live if
+          # it is reachable in an earlier commit -- scanning only the tip is the
+          # single most common way secret scanning gives false assurance.
+          fetch-depth: 0
+
+      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  filesystem:
+    name: Filesystem & config (Trivy)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Trivy scan
+        uses: aquasecurity/trivy-action@d2a0b60797ff03db6132bd4e2b293f9b37081297 # master
+        with:
+          scan-type: fs
+          scanners: vuln,secret,misconfig
+          format: sarif
+          output: trivy.sarif
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+
+      - name: Upload SARIF
+        if: always()
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@6f5948dfacef28e207b48d0905cf90c03365536d # v3
+        with:
+          sarif_file: trivy.sarif
+          category: trivy
+
+  compliance-gate:
+    name: STIG compliance gate (dogfood)
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: python -m pip install --upgrade pip && pip install -e .
+
+      - name: Generate synthetic scan data
+        # This repository contains no scan data. The sample set is built here,
+        # from a deterministic generator, every run.
+        run: python examples/generate_sample_data.py
+
+      - name: Compliance summary to the job page
+        # Written before the gate runs, so the posture is visible on the run
+        # page even when -- especially when -- the next step fails the build.
+        run: |
+          stigkit scan examples/current --format markdown >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Emit SARIF
+        run: stigkit scan examples/current --format sarif --output stig.sarif
+
+      - name: Upload STIG findings to Code Scanning
+        if: always()
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@6f5948dfacef28e207b48d0905cf90c03365536d # v3
+        with:
+          sarif_file: stig.sarif
+          category: stig-compliance
+
+      - name: Archive reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: compliance-reports
+          path: stig.sarif
+          retention-days: 30
+
+      - name: Gate on CAT I findings
+        # The demonstration of the point: a CAT I open finding fails the build.
+        # `continue-on-error` because the sample data is randomised and is meant
+        # to show the gate firing, not to hold this repo to a STIG baseline it
+        # does not have. A real pipeline drops this line -- that is the whole
+        # difference between a report and a control.
+        continue-on-error: true
+        run: stigkit scan examples/current --fail-on cat1 --format table
