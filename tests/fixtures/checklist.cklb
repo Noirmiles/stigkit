@@ -1,0 +1,68 @@
+{
+  "title": "Synthetic Demo OS checklist",
+  "id": "00000000-0000-4000-8000-000000000001",
+  "cklb_version": "1.0",
+  "target_data": {
+    "target_type": "Computing",
+    "host_name": "demo-db-01",
+    "ip_address": "192.0.2.11",
+    "is_web_database": false
+  },
+  "stigs": [
+    {
+      "stig_name": "Synthetic Demo OS Security Technical Implementation Guide",
+      "display_name": "Synthetic Demo OS",
+      "stig_id": "Synthetic_Demo_OS_STIG",
+      "version": "1",
+      "release_info": "Release: 1 Benchmark Date: 01 Aug 2026",
+      "rules": [
+        {
+          "group_id": "V-000001",
+          "rule_id": "SV-000001r1_rule",
+          "rule_version": "DEMO-00-000010",
+          "rule_title": "The demo OS must display a logon banner before granting access.",
+          "severity": "high",
+          "status": "open",
+          "finding_details": "No banner configured on the synthetic host.",
+          "comments": "Remediation tracked under synthetic ticket DEMO-101.",
+          "ccis": ["CCI-000048", "CCI-000050"],
+          "check_content": "Verify a banner is configured.",
+          "fix_text": "Configure the banner text."
+        },
+        {
+          "group_id": "V-000002",
+          "rule_id": "SV-000002r1_rule",
+          "rule_version": "DEMO-00-000020",
+          "rule_title": "The demo OS must enforce a minimum password length of 15 characters.",
+          "severity": "medium",
+          "status": "not_a_finding",
+          "finding_details": "Minimum length is 15.",
+          "comments": "",
+          "ccis": ["CCI-000205"]
+        },
+        {
+          "group_id": "V-000003",
+          "rule_id": "SV-000003r1_rule",
+          "rule_version": "DEMO-00-000030",
+          "rule_title": "The demo OS must set a session inactivity timeout.",
+          "severity": "low",
+          "status": "not_applicable",
+          "finding_details": "Host is headless; no interactive sessions.",
+          "comments": "",
+          "ccis": ["CCI-000057"]
+        },
+        {
+          "group_id": "V-000004",
+          "rule_id": "SV-000004r1_rule",
+          "rule_version": "DEMO-00-000040",
+          "rule_title": "The demo OS must audit privileged command execution.",
+          "severity": "medium",
+          "status": "not_reviewed",
+          "finding_details": "",
+          "comments": "",
+          "ccis": ["CCI-000172"]
+        }
+      ]
+    }
+  ]
+}
