@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SYNTHETIC TEST FIXTURE. Structure follows DISA's public U_CCI_List.xml.
+  Definitions are paraphrased/invented; the CCI-to-control pairings exercise
+  parser behaviour and are not authoritative.
+-->
+<cci_list xmlns="http://iase.disa.mil/cci">
+  <cci_items>
+    <cci_item id="CCI-000048">
+      <definition>The information system displays an approved use notification banner.</definition>
+      <references>
+        <reference creator="NIST" title="NIST SP 800-53 Revision 4" version="4" index="AC-8 a"/>
+        <reference creator="NIST" title="NIST SP 800-53 Revision 5" version="5" index="AC-8 a"/>
+      </references>
+    </cci_item>
+    <cci_item id="CCI-000050">
+      <definition>The banner remains on screen until acknowledged.</definition>
+      <references>
+        <reference creator="NIST" title="NIST SP 800-53 Revision 5" version="5" index="AC-8 b"/>
+      </references>
+    </cci_item>
+    <cci_item id="CCI-000205">
+      <definition>The information system enforces a minimum password length.</definition>
+      <references>
+        <!-- Rev 4 put this under IA-5 (1) (a); Rev 5 moved it. Selecting the
+             wrong revision silently mis-attributes the finding. -->
+        <reference creator="NIST" title="NIST SP 800-53 Revision 4" version="4" index="IA-5 (1) (a)"/>
+        <reference creator="NIST" title="NIST SP 800-53 Revision 5" version="5" index="IA-5 (1) (h)"/>
+      </references>
+    </cci_item>
+    <cci_item id="CCI-000057">
+      <definition>The information system initiates a session lock after inactivity.</definition>
+      <references>
+        <reference creator="NIST" title="NIST SP 800-53 Revision 5" version="5" index="AC-11 a"/>
+      </references>
+    </cci_item>
+    <cci_item id="CCI-000172">
+      <definition>The information system generates audit records for defined events.</definition>
+      <references>
+        <reference creator="NIST" title="NIST SP 800-53 Revision 5" version="5" index="AU-12 c"/>
+      </references>
+    </cci_item>
+  </cci_items>
+</cci_list>
