@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# Tooling
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Tool output
+*.sarif
+out/
+reports/
+
+# Real scan content never belongs in this repo. Everything under tests/fixtures/
+# is hand-authored synthetic data; see docs/DESIGN.md "Synthetic data policy".
+*.ckl
+*.cklb
+!tests/fixtures/**/*.cklb
+U_*.zip
+*_STIG_*.xml
+!tests/fixtures/**/*.xml
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store

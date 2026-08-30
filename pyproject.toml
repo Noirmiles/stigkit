@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stigkit"
+version = "0.1.0"
+description = "Parse DISA STIG/SCAP scan results, map them to NIST 800-53 controls, and gate a CI pipeline on the outcome."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Myles Thompkins" }]
+keywords = ["stig", "scap", "xccdf", "nist-800-53", "compliance-as-code", "devsecops", "sarif"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: System Administrators",
+  "Topic :: Security",
+  "Programming Language :: Python :: 3",
+]
+
+# Deliberately minimal. Every dependency in a security tool is attack surface you
+# inherit; these are the two that earn their place.
+#   defusedxml - hardened XML parsing (see docs/DESIGN.md "Parsing untrusted XML")
+#   rich       - terminal tables; the only presentation dependency
+dependencies = [
+  "defusedxml>=0.7.1",
+  "rich>=13.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.6"]
+
+[project.scripts]
+stigkit = "stigkit.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/Noirmiles/stigkit"
+Issues = "https://github.com/Noirmiles/stigkit/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "C4", "SIM"]
+# S101: pytest's assert is the point of pytest.
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106"]
+
+[tool.coverage.run]
+source = ["stigkit"]
+branch = true
