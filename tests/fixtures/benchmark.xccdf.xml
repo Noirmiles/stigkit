@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SYNTHETIC TEST FIXTURE. Hand-authored for stigkit's test suite.
+  Structure follows the public XCCDF 1.1.4 schema; all identifiers, titles and
+  text are invented. This is not DISA content and describes no real system.
+-->
+<Benchmark xmlns="http://checklists.nist.gov/xccdf/1.1"
+           id="xccdf_org.stigkit_benchmark_SyntheticDemoOS">
+  <title>Synthetic Demo OS Security Technical Implementation Guide</title>
+  <version>1</version>
+  <Group id="V-000001">
+    <title>SRG-OS-000023</title>
+    <Rule id="SV-000001r1_rule" severity="high">
+      <version>DEMO-00-000010</version>
+      <title>The demo OS must display a logon banner before granting access.</title>
+      <check system="C-000001r1_chk">
+        <check-content>Verify a banner is configured. If it is not, this is a finding.</check-content>
+      </check>
+      <fixtext fixref="F-000001r1_fix">Configure the banner text.</fixtext>
+      <ident system="http://iase.disa.mil/cci">CCI-000048</ident>
+      <ident system="http://iase.disa.mil/cci">CCI-000050</ident>
+    </Rule>
+  </Group>
+  <Group id="V-000002">
+    <Rule id="SV-000002r1_rule" severity="medium">
+      <version>DEMO-00-000020</version>
+      <title>The demo OS must enforce a minimum password length of 15 characters.</title>
+      <check system="C-000002r1_chk">
+        <check-content>Check the configured minimum length.</check-content>
+      </check>
+      <fixtext fixref="F-000002r1_fix">Set minimum length to 15.</fixtext>
+      <ident system="http://iase.disa.mil/cci">CCI-000205</ident>
+    </Rule>
+  </Group>
+  <Group id="V-000003">
+    <Rule id="SV-000003r1_rule" severity="low">
+      <version>DEMO-00-000030</version>
+      <title>The demo OS must set a session inactivity timeout.</title>
+      <check system="C-000003r1_chk"><check-content>Check the timeout value.</check-content></check>
+      <fixtext fixref="F-000003r1_fix">Set the timeout to 15 minutes.</fixtext>
+      <ident system="http://iase.disa.mil/cci">CCI-000057</ident>
+    </Rule>
+  </Group>
+  <Group id="V-000004">
+    <!-- No @severity: exercises the "never round unknown down to low" path. -->
+    <Rule id="SV-000004r1_rule">
+      <version>DEMO-00-000040</version>
+      <title>The demo OS must audit privileged command execution.</title>
+      <check system="C-000004r1_chk"><check-content>Review the audit rules.</check-content></check>
+      <fixtext fixref="F-000004r1_fix">Add the audit rule.</fixtext>
+      <ident system="http://iase.disa.mil/cci">CCI-000172</ident>
+    </Rule>
+  </Group>
+  <Group id="V-000005">
+    <Rule id="SV-000005r1_rule" severity="high">
+      <version>DEMO-00-000050</version>
+      <title>The demo OS must disable unauthenticated remote access.</title>
+      <check system="C-000005r1_chk"><check-content>Check the remote access config.</check-content></check>
+      <fixtext fixref="F-000005r1_fix">Disable the unauthenticated listener.</fixtext>
+      <!-- Unmapped CCI: exercises graceful degradation in control attribution. -->
+      <ident system="http://iase.disa.mil/cci">CCI-999999</ident>
+    </Rule>
+  </Group>
+</Benchmark>

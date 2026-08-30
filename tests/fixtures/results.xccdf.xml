@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SYNTHETIC TEST FIXTURE. Invented results for the synthetic benchmark above. -->
+<Benchmark xmlns="http://checklists.nist.gov/xccdf/1.2"
+           id="xccdf_org.stigkit_benchmark_SyntheticDemoOS">
+  <title>Synthetic Demo OS Security Technical Implementation Guide</title>
+  <version>1</version>
+  <Group id="V-000001">
+    <Rule id="SV-000001r1_rule" severity="high">
+      <version>DEMO-00-000010</version>
+      <title>The demo OS must display a logon banner before granting access.</title>
+      <ident system="http://cyber.mil/cci">CCI-000048</ident>
+    </Rule>
+  </Group>
+  <Group id="V-000002">
+    <Rule id="SV-000002r1_rule" severity="medium">
+      <version>DEMO-00-000020</version>
+      <title>The demo OS must enforce a minimum password length of 15 characters.</title>
+      <ident system="http://cyber.mil/cci">CCI-000205</ident>
+    </Rule>
+  </Group>
+  <Group id="V-000003">
+    <Rule id="SV-000003r1_rule" severity="low">
+      <version>DEMO-00-000030</version>
+      <title>The demo OS must set a session inactivity timeout.</title>
+      <ident system="http://cyber.mil/cci">CCI-000057</ident>
+    </Rule>
+  </Group>
+  <Group id="V-000004">
+    <Rule id="SV-000004r1_rule" severity="medium">
+      <version>DEMO-00-000040</version>
+      <title>The demo OS must audit privileged command execution.</title>
+      <ident system="http://cyber.mil/cci">CCI-000172</ident>
+    </Rule>
+  </Group>
+  <Group id="V-000005">
+    <Rule id="SV-000005r1_rule" severity="high">
+      <version>DEMO-00-000050</version>
+      <title>The demo OS must disable unauthenticated remote access.</title>
+      <ident system="http://cyber.mil/cci">CCI-000172</ident>
+    </Rule>
+  </Group>
+
+  <TestResult id="xccdf_org.stigkit_testresult_demo-web-01"
+              start-time="2026-08-01T09:00:00"
+              end-time="2026-08-01T09:14:22">
+    <target>demo-web-01</target>
+    <target-address>192.0.2.10</target-address>
+    <rule-result idref="SV-000001r1_rule" severity="high"><result>fail</result></rule-result>
+    <rule-result idref="SV-000002r1_rule" severity="medium"><result>pass</result></rule-result>
+    <rule-result idref="SV-000003r1_rule" severity="low"><result>notapplicable</result></rule-result>
+    <rule-result idref="SV-000004r1_rule" severity="medium"><result>notchecked</result></rule-result>
+    <rule-result idref="SV-000005r1_rule" severity="high"><result>error</result></rule-result>
+  </TestResult>
+</Benchmark>
