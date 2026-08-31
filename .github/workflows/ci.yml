@@ -186,15 +186,40 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # trivy-action forces a bad choice: its newest release (v0.36.0, April) is
+      # four months behind its own master, so pinning the tag runs an older
+      # scanner, and pinning master leaves a SHA that no tag can vouch for --
+      # the one pin in this file a reviewer could not audit. Installing the
+      # Trivy release directly removes the choice. The version is explicit, the
+      # download is checksum-verified, and there is one less third-party action
+      # holding a token. Same reasoning as the gitleaks job above.
+      #
+      # Bump both values together; the checksum is published by the Trivy
+      # release at trivy_<version>_checksums.txt.
+      - name: Install Trivy
+        env:
+          TRIVY_VERSION: "0.74.0"
+          TRIVY_SHA256: "2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a"
+        run: |
+          set -euo pipefail
+          url="https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          curl -sSfL "$url" -o trivy.tar.gz
+          echo "${TRIVY_SHA256}  trivy.tar.gz" | sha256sum -c -
+          tar -xzf trivy.tar.gz trivy
+          sudo install -m 0755 trivy /usr/local/bin/trivy
+          trivy --version
+
       - name: Trivy scan
-        uses: aquasecurity/trivy-action@d2a0b60797ff03db6132bd4e2b293f9b37081297 # master
-        with:
-          scan-type: fs
-          scanners: vuln,secret,misconfig
-          format: sarif
-          output: trivy.sarif
-          severity: CRITICAL,HIGH
-          exit-code: "1"
+        # Exits 1 on a CRITICAL/HIGH finding. The upload step below is
+        # if: always(), so the SARIF still reaches Code Scanning when it does.
+        run: |
+          set -euo pipefail
+          trivy fs . \
+            --scanners vuln,secret,misconfig \
+            --format sarif \
+            --output trivy.sarif \
+            --severity CRITICAL,HIGH \
+            --exit-code 1
 
       - name: Upload SARIF
         if: always()
