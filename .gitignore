@@ -32,6 +32,3 @@ U_*.zip
 .vscode/
 .idea/
 .DS_Store
-
-# Local agent working notes, not part of the project
-CLAUDE.md
